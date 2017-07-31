@@ -2,6 +2,7 @@
   "name": "andyharis/yii2apigql",
   "description": "Yii2 API gql",
   "type": "yii2-extension",
+  "version": "1.0.0",
   "keywords": [
     "yii2",
     "extension"
@@ -21,7 +22,6 @@
       "andyharis\\yii2apigql\\": ""
     }
   },
-  "minimum-stability": "dev",
   "extra":{
     "bootstrap":"andyharis\\yii2apigql\\Bootstrap"
   }
