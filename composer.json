@@ -2,7 +2,6 @@
   "name": "andyharis/yii2apigql",
   "description": "Yii2 API gql",
   "type": "yii2-extension",
-  "version": "1.0.0",
   "keywords": [
     "yii2",
     "extension"
@@ -15,7 +14,7 @@
     }
   ],
   "require": {
-    "yiisoft/yii2": "*"
+    "yiisoft/yii2": "^2"
   },
   "autoload": {
     "psr-4": {
