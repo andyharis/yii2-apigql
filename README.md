@@ -10,13 +10,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-php composer.phar require --prefer-dist andyharis/yii-2apigql "*"
+php composer.phar require --prefer-dist andyharis/yii2apigql "*"
 ```
 
 or add
 
 ```
-"andyharis/yii2-apigql": "*"
+"andyharis/yii2apigql": "*"
 ```
 
 to the require section of your `composer.json` file.
