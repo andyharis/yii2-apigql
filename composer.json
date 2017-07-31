@@ -21,6 +21,7 @@
       "andyharis\\yii2apigql\\": ""
     }
   },
+  "minimum-stability": "dev",
   "extra":{
     "bootstrap":"andyharis\\yii2apigql\\Bootstrap"
   }
