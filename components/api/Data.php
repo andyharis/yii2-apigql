@@ -46,9 +46,16 @@ class Data
       $json = Json::decode($string);
       $select = self::combine($json);
     } catch (\Throwable $e) {
-      $r = preg_replace('/(\w+\:([<>!=~]+|)[A-Za-z0-9\-]+|(count\(([A-Za-z_]+)\) AS (\w+))|\w+)/', "'$0'", $string);
-      $r = "return [" . preg_replace('/(\'\w+\')(\[)/', "$1=>[", $r) . "];";
-      $select = eval($r);
+//      $conditions = Conditions::$conditions();
+//      $prefix = Conditions::PREFIX;
+//      $pattern = "/(\w+$prefix([$conditions]+|)[A-Za-z0-9\-]+)/";
+//      echo "Debug: <b>" . __FILE__ . "</b> on method <b>" . __METHOD__ . "</b> on line <b>" . __LINE__ . "</b>";
+//      \frontend\components\Helpers::debug(false,$pattern);
+//      exit;
+//      $r = preg_replace($pattern, "'$0'", $string);
+//      $r = preg_replace('/(\w+' . Conditions::PREFIX . '([<>!=~]+|)[A-Za-z0-9\-]+|(count\(([A-Za-z_]+)\) AS (\w+))|\w+)/', "'$0'", $string);
+//      $r = "return [" . preg_replace('/(\'\w+\')(\[)/', "$1=>[", $r) . "];";
+//      $select = eval($r);
     }
     if (isset($_GET['d'])) {
       echo "<pre>";
@@ -65,7 +72,7 @@ class Data
       if (is_array($array))
         $select[$key] = self::combine($array);
       else
-        $select[] = $key;
+        $select[] = $array ? $key.$array : $key;
     }
     return $select;
   }

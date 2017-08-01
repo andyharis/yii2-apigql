@@ -15,11 +15,6 @@ use andyharis\yii2apigql\components\api\Update;
 use andyharis\yii2apigql\components\Helpers;
 use yii\helpers\Json;
 
-class BB
-{
-  public $a = 1;
-}
-
 class ApigqlController extends API
 {
 
@@ -33,7 +28,7 @@ class ApigqlController extends API
     $data = $result['data'];
     if (isset($_GET['ss'])) {
       echo "Debug: <b>" . __FILE__ . "</b> on method <b>" . __METHOD__ . "</b> on line <b>" . __LINE__ . "</b>";
-      \frontend\components\Helpers::debug(false, $data);
+      Helpers::debug(false, $data);
       exit;
     }
     if ($result['success'])

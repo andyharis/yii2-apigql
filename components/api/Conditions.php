@@ -10,11 +10,11 @@ namespace andyharis\yii2apigql\components\api;
 
 
 use frontend\components\SneakyRecord;
-use Prophecy\Exception\Doubler\MethodNotFoundException;
-use yii\base\Object;
+use yii\base\Model;
+use yii\base\UnknownMethodException;
 use yii\helpers\Inflector;
 
-class Conditions extends Object
+class Conditions extends Model
 {
   CONST PREFIX = ':';
   public $attribute;
@@ -22,6 +22,7 @@ class Conditions extends Object
   public $rawValue;
   public $rawAttribute;
   public $rawCondition;
+  public $warnings = [];
   /**
    * @var SneakyRecord
    */
@@ -33,9 +34,10 @@ class Conditions extends Object
     '<=' => 'lteq',
     '>' => 'gt',
     '>=' => 'gteq',
+//    'radial\(\d+,\d+,\d+\)' => 'radialSearch'
   ];
 
-  public function __construct($model, $attribute,$chain)
+  public function __construct($model, $attribute, $chain)
   {
     $this->model = $model;
     $this->attribute = $attribute;
@@ -55,11 +57,12 @@ class Conditions extends Object
         $this->rawValue = $splitted[1];
         $this->rawCondition = $condition;
         return true;
+      } else if (preg_match('/:/', $this->attribute)) {
+        $this->warnings[] = "Not found $pattern in {$this->attribute}";
       }
     }
     return false;
   }
-
 
   private function getAttribute()
   {
@@ -96,6 +99,11 @@ class Conditions extends Object
     return ['>=', $this->getAttribute(), $this->rawValue];
   }
 
+  public function createRadialSearchConditions()
+  {
+    return [];
+  }
+
   public function getCondition()
   {
     $method = $this->conditions[$this->rawCondition];
@@ -103,6 +111,6 @@ class Conditions extends Object
     if ($this->hasMethod($method))
       return $this->$method();
     else
-      throw new MethodNotFoundException("Method '$method' not found!", self::className(), $method);
+      throw new UnknownMethodException("Method '$method' not found!");
   }
 }

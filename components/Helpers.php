@@ -72,4 +72,24 @@ class Helpers
     return $data;
   }
 
+
+  /**
+   * @param $e \Throwable
+   * @param $data
+   */
+  public static function debug($e, $data, $dump = false)
+  {
+//    preg_match('/\w+\.php/', __FILE__, $file);
+    if ($e != false) {
+      $data['errors'] = [
+        'message' => $e->getMessage(),
+        'line' => $e->getLine(),
+        'file' => $e->getFile(),
+      ];
+    }
+    echo "<div><pre>";
+    $dump ? var_dump($data) : print_r($data);
+    echo "</pre></div>";
+  }
+
 }

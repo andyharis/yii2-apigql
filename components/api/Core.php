@@ -9,12 +9,13 @@
 namespace andyharis\yii2apigql\components\api;
 
 use andyharis\yii2apigql\components\Helpers;
-use yii\base\Object;
+use andyharis\yii2apigql\components\Yii2ApigqlRecord;
+use yii\base\Model;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 use yii\helpers\Inflector;
 
-class Core extends Object
+class Core extends Model
 {
   const JOIN = 0;
   const JOIN_WITH = 1;
@@ -36,9 +37,12 @@ class Core extends Object
   public $with = [];
   public $joinWith = [];
 
-  public $aliasChains = [];
+  public $models = [];
   public $attributes = [];
+
   public $warnings = [];
+  public $trace = [];
+
   /**
    * @var Relations
    */
@@ -58,7 +62,7 @@ class Core extends Object
       ->asArray()
       ->alias($model->alias)
       ->groupBy($this->addAttribute($model, $model->PK));
-    $this->aliasChains[$table] = $model->alias;
+    $this->models[$table] = $model;
     $this->className = $className;
     $this->table = $table;
     $this->model = $model;
@@ -80,19 +84,77 @@ class Core extends Object
   private function prepareSelect()
   {
     $this->query = $this->recursiveSelect($this->select, $this->model, $this->query, []);
-//    $this->query->select(array_unique(array_merge($attributes, $this->attributes)));
     return $this;
-//    return $this;
   }
 
+  private function prepareLimit()
+  {
+    $this->query->limit($this->limit)->offset($this->offset);
+    return $this;
+  }
+
+  private function prepareSort()
+  {
+    foreach ($this->sort as $sort) {
+      $this->query->addOrderBy($this->addSort($sort));
+    }
+    return $this;
+  }
+
+  private function prepareWhere()
+  {
+    foreach ($this->where as $conditions) {
+      $this->query->andWhere($conditions->getCondition());
+    }
+    return $this;
+  }
+
+  private function prepareRelations()
+  {
+    $this->appendRelations($this->with, $this->model, $this->query, self::JOIN);
+    $this->appendRelations($this->joinWith, $this->model, $this->query, self::JOIN_WITH);
+    if ($this->query->select)
+      $this->query->select = array_unique($this->query->select);
+    return $this;
+  }
+
+  public function execute()
+  {
+    $count = clone $this->query;
+    $count->select($this->addAttribute($this->model, $this->model->PK));
+    $count->orderBy = [$this->addAttribute($this->model, $this->model->PK) => SORT_ASC];
+    $data = $this->query->all();
+    if (isset($_GET['trace'])) {
+      echo "Debug: <b>" . __FILE__ . "</b> on method <b>" . __METHOD__ . "</b> on line <b>" . __LINE__ . "</b>";
+      \frontend\components\Helpers::debug(false, $this->trace);
+      exit;
+    }
+    if (isset($_GET['warnings'])) {
+      echo "Debug: <b>" . __FILE__ . "</b> on method <b>" . __METHOD__ . "</b> on line <b>" . __LINE__ . "</b>";
+      \frontend\components\Helpers::debug(false, $this->warnings);
+      exit;
+    }
+    $result = [
+      'success' => true,
+      'data' => $data,
+    ];
+    if (count($this->warnings) == 0) {
+      $result['count'] = $count->limit(-1)->offset(-1)->count();
+      return $result;
+    } else
+      return [
+        'success' => false,
+        'data' => array_unique($this->warnings)
+      ];
+  }
 
   public function getModelAttributes($model, $attributes, $full = false)
   {
     $data = [];
     $least = [];
     foreach ($attributes as $k => $attribute) {
-      if (!is_array($attribute) && $model->hasProperty($this->getRawAttribute($attribute)))
-        $data[] = $this->getRawAttribute($attribute);
+      if (!is_array($attribute)) // && $model->hasProperty($this->getRawAttribute($attribute))
+        $data[] = $attribute;
       else
         $least[$k] = $attribute;
     }
@@ -106,16 +168,15 @@ class Core extends Object
     $model = $relationModel->primaryModel;
     $joinModel = new $relationModel->modelClass();
     $joinModel->generateAlias();
-    $resultAttributes = $this->getModelAttributes($joinModel, $attributes, true);
-    $currentAttributes = $resultAttributes[0];
-    $leastAttributes = $resultAttributes[1];
-    $relationLink = $this->getRelationLink($model, $relatedTable);
     $chain[] = $relatedTable;
     $stringChain = implode('.', $chain);
+
+    $resultAttributes = $this->getModelAttributes($joinModel, $attributes);
+    $currentAttributes = $resultAttributes;
+    $relationLink = $this->getRelationLink($model, $relatedTable);
     $joinAttributes = array_merge($currentAttributes, [
       $relationLink[0]
     ]);
-    $where = [];
     $this->with[$stringChain] = [
       'join' => [
         function ($params, $query, $primaryModel, $join) use ($joinModel, $relatedTable, $stringChain, $joinAttributes, $relationLink) {
@@ -126,11 +187,13 @@ class Core extends Object
                 if ($conditions->chain == $stringChain)
                   $q->andWhere($conditions->getCondition());
               }
-//              if (isset($this->joinWith[$stringChain]) && isset($this->joinWith[$stringChain]['sort']))
-//                $q->addOrderBy($this->joinWith[$stringChain]['sort']);
+              if (isset($this->joinWith[$stringChain]) && isset($this->joinWith[$stringChain]['sort']))
+                $q->addOrderBy($this->joinWith[$stringChain]['sort']);
               $q->alias($joinModel->alias)
-                ->groupBy($this->addAttribute($joinModel, $joinModel->PK))
-                ->addSelect($joinAttributes);
+                ->groupBy($this->addAttribute($joinModel, $joinModel->PK));
+              foreach ($joinAttributes as $joinAttribute) {
+                $this->addSelect($joinModel, $joinAttribute, explode('.', $stringChain), $q);
+              }
               $cb = function ($key) use ($stringChain) {
                 $currentParts = preg_split('/\./', $stringChain);
                 $nextParts = preg_split('/\./', $key);
@@ -141,9 +204,16 @@ class Core extends Object
                 }
                 return $return;
               };
-              $withs = $join ? $this->joinWith : $this->with;
-              if ($this->checkIsDone($stringChain, $join))
-                $this->appendRelations($withs, $joinModel, $q, $join, $cb);
+//              if ($this->checkIsDone($stringChain, $join)) {
+                $this->appendRelations($this->joinWith, $joinModel, $q, self::JOIN_WITH, $cb);
+//              }
+              $this->appendRelations($this->with, $joinModel, $q, self::JOIN, $cb);
+//              \frontend\components\Helpers::debug(false, [
+//                'model' => $q->modelClass,
+//                'primaryModel'=>$primaryModel::className(),
+//                'withs' => array_keys($q->with ?? []),
+//                'joinWiths' => array_keys($q->joinWith ?? [])
+//              ]);
               return $q;
             }];
         }
@@ -151,7 +221,7 @@ class Core extends Object
       'attributes' => $joinAttributes,
       'done' => false
     ];
-    $this->aliasChains[implode('.', $chain)] = $joinModel->alias;
+    $this->models[implode('.', $chain)] = $joinModel;
     $query = $this->recursiveSelect($attributes, $joinModel, $query, $chain);
     return $query;
   }
@@ -172,16 +242,30 @@ class Core extends Object
         } else
           $this->warnings[] = "Model {$model::className()} doesn't have relation named '{$relatedTable}'.";
       } else {
-        $rawAttribute = $this->getRawAttribute($attribute);
-        if ($model->hasAttribute($rawAttribute)) {
-          $this->addWhere($model, $attribute, $chain);
-          if (count($chain) == 0)
-            $query->addSelect($this->addAttribute($model, $rawAttribute));
-        } else
-          $this->warnings[] = "Model {$model::className()} doesn't have attribute '{$attribute}'.";
+        $this->addSelect($model, $attribute, $chain, count($chain) == 0 ? $query : false);
+//        if (!$this->checkCustomFunction($attribute)) {
+//          $rawAttribute = $this->getRawAttribute($attribute);
+//          if ($model->hasAttribute($rawAttribute)) {
+//            $this->addWhere($model, $attribute, $chain);
+//            if (count($chain) == 0)
+//              $query->addSelect($this->addAttribute($model, $rawAttribute));
+//          } else
+//            $this->warnings[] = "Model {$model::className()} doesn't have attribute '{$attribute}'.";
+//        }
       }
     }
     return $query;
+  }
+
+  public function addSelect($model, $attribute, $chain, $query = false)
+  {
+    $selectObject = new Select($model, $attribute);
+    if ($attribute = $selectObject->addSelectAttribute()) {
+      if ($query)
+        $query->addSelect($attribute);
+    } else {
+      $this->warnings[] = "Model {$model::className()} doesn't have attribute '{$attribute}'.";
+    }
   }
 
 
@@ -199,7 +283,7 @@ class Core extends Object
     return preg_split("/$prefix/", $attribute)[0];
   }
 
-  public function addAttribute(object $model, string $attribute)
+  public function addAttribute($model, string $attribute)
   {
     $alias = $model->alias;
     $attribute = $this->getRawAttribute($attribute);
@@ -227,13 +311,17 @@ class Core extends Object
     if ($last > 0)
       unset($s[$last]);
     $chain = implode('.', $s);
-    $alias = $this->getAliasByChain($chain);
-    $resultSort = ["$alias.{$attribute}" => $sign];
-    $this->changeJoin($s);
-    return $resultSort;
+    $model = $this->getModelByChain($chain);
+    $alias = $model->alias;
+    if ($model->hasAttribute($attribute)) {
+      $resultSort = ["$alias.{$attribute}" => $sign];
+      $this->changeJoin($s, $resultSort);
+      return $resultSort;
+    }
+    return [$attribute => $sign];
   }
 
-  public function changeJoin(array $chain)
+  public function changeJoin(array $chain, $sort = false)
   {
     $start = [];
     foreach ($chain as $partChain) {
@@ -241,18 +329,29 @@ class Core extends Object
       $sChain = implode('.', $start);
       if (isset($this->with[$sChain])) {
         $this->joinWith[$sChain] = $this->with[$sChain];
-//        $this->joinWith[$sChain]['sort'] = $resultSort;
+        if ($sort)
+          $this->joinWith[$sChain]['sort'] = $sort;
+//        $this->trace[] = [
+//          'message' => 'Changing with to joinWith',
+//          'sChain' => $sChain
+//        ];
         unset($this->with[$sChain]);
       }
     }
   }
 
-  public function getAliasByChain(string $chain)
+  public function getAliasByChain(string $chain, $type = 'alias')
   {
-    return $this->aliasChains[$chain] ?? $this->aliasChains[$this->table];
+    $model = $this->getModelByChain($chain);
+    return $model->$type;
   }
 
-  public static function checkRelationExist(Object $model, String $relationName)
+  public function getModelByChain($chain)
+  {
+    return $this->models[$chain] ?? $this->models[$this->table];
+  }
+
+  public static function checkRelationExist($model, String $relationName)
   {
     $relationName = "get" . Inflector::id2camel($relationName);
     try {
@@ -262,7 +361,7 @@ class Core extends Object
     }
   }
 
-  public function getRelationLink(Object $model, String $relationName)
+  public function getRelationLink($model, String $relationName)
   {
     $relation = "get" . Inflector::id2camel($relationName);
     $link = $model->$relation()->link;
@@ -270,28 +369,6 @@ class Core extends Object
       array_keys($link)[0],
       array_values($link)[0]
     ];
-  }
-
-  private function prepareLimit()
-  {
-    $this->query->limit($this->limit)->offset($this->offset);
-    return $this;
-  }
-
-  private function prepareSort()
-  {
-    foreach ($this->sort as $sort) {
-      $this->query->addOrderBy($this->addSort($sort));
-    }
-    return $this;
-  }
-
-  private function prepareWhere()
-  {
-    foreach ($this->where as $conditions) {
-      $this->query->andWhere($conditions->getCondition());
-    }
-    return $this;
   }
 
   public function appendRelations(&$joins, $model, &$query, $type, $checkF = false)
@@ -304,48 +381,23 @@ class Core extends Object
       return $result;
     };
     foreach ($joins as $key => &$each) {
-      if ($each['done'] || !$check($key))
+      if (!$check($key))
         continue;
-      $each['done'] = true;
+//      $each['done'] = true;
+      $result = $getResult($each['join']);
       if ($type == self::JOIN)
-        $query->with($getResult($each['join']));
-      else
-        $query->joinWith($getResult($each['join']));
-    }
-    return $this;
-  }
-
-  private function prepareRelations()
-  {
-    $this->appendRelations($this->with, $this->model, $this->query, self::JOIN);
-    $this->appendRelations($this->joinWith, $this->model, $this->query, self::JOIN_WITH);
-    if ($this->query->select)
-      $this->query->select = array_unique($this->query->select);
-    return $this;
-  }
-
-  public function execute()
-  {
-    $count = clone $this->query;
-    $count->select($this->addAttribute($this->model, $this->model->PK));
-    $data = $this->query->all();
-    if (isset($_GET['warnings'])) {
-      echo "Debug: <b>" . __FILE__ . "</b> on method <b>" . __METHOD__ . "</b> on line <b>" . __LINE__ . "</b>";
-      \frontend\components\Helpers::debug(false, $this->warnings);
-      exit;
-    }
-    $result = [
-      'success' => true,
-      'data' => $data,
-    ];
-    if (count($this->warnings) == 0) {
-      $result['count'] = $count->limit(-1)->offset(-1)->count();
-      return $result;
-    } else
-      return [
-        'success' => false,
-        'data' => array_unique($this->warnings)
+        $query->with($result);
+      else {
+        $query->joinWith($result);
+      }
+      $this->trace[] = [
+        'model' => $model->className(),
+        'key' => $key,
+        'withs' => array_keys($query->with ?? []),
+        'joinWiths' => array_keys($query->joinWith ?? []),
       ];
+    }
+    return $this;
   }
 
 

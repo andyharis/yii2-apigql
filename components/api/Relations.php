@@ -28,7 +28,7 @@ class Relations extends Object
   public function addModel(string $name, string $className, array $params = [])
   {
     $this->models[$name] = $className;
-    $this->addAlias($name);
+//    $this->addAlias($name);
     return $this;
   }
 
