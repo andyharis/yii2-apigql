@@ -319,7 +319,8 @@ class Core extends Object
   {
     $this->appendRelations($this->with, $this->model, $this->query, self::JOIN);
     $this->appendRelations($this->joinWith, $this->model, $this->query, self::JOIN_WITH);
-    $this->query->select = array_unique($this->query->select);
+    if ($this->query->select)
+      $this->query->select = array_unique($this->query->select);
     return $this;
   }
 

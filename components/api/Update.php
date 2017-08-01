@@ -290,12 +290,6 @@ class Update extends Object
   public function execute()
   {
     $result = $this->insertTransaction($this->model);
-//    echo "Debug: <b>" . __FILE__ . "</b> on method <b>" . __METHOD__ . "</b> on line <b>" . __LINE__ . "</b>";
-//    \frontend\components\Helpers::debug(false, [
-//      "HAS MANY"=>$this->relatedUpdates,
-//      "HAS ONE"=>$this->linksUpdates
-//    ]);
-//    exit;
     return $result;
   }
 }
