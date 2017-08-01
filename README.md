@@ -6,13 +6,12 @@ Installation
 ------------
 
 The preferred way to install this extension is through [composer](http://getcomposer.org/download/).
-
 Either run
-
 ```
 composer require andyharis/yii2apigql
 ```
-
+Usage
+---
 After installation you should enable this module extension in your config file:
 1. Open your `frontend/config/main.php`
 2. Add module `gql` to `bootstrap` section
@@ -41,7 +40,8 @@ I prefer to create a separete file called `models.php` which i require in compon
 
 
 
-####Creating file models.php
+Creating file models.php
+---
 ```php
 use andyharis\yii2apigql\components\api\Relations;
 // Initializing component relations class which will handle dependencies
@@ -56,7 +56,8 @@ $object
 return $object;
 ```
 
-####Almost there
+Almost there
+---
 Another important thing is to extend all used models with `gql` component
 ```php
 namespace frontend\models;
@@ -66,5 +67,3 @@ use andyharis\yii2apigql\components\Yii2ApigqlRecord;
 class Clients extends Yii2ApigqlRecord
 ```
 Thats it. Now you can work with `yii2apigql`.
-
-###API Docs
