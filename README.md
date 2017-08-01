@@ -66,4 +66,9 @@ use andyharis\yii2apigql\components\Yii2ApigqlRecord;
 
 class Clients extends Yii2ApigqlRecord
 ```
-Thats it. Now you can work with `yii2apigql`.
+That's it. Now you can work with `yii2apigql`.
+
+Just make a request to `gql/clients?select=name,age` and you will get your result.
+Where `clients` you model name and `name,age` are attributes from current model.
+
+For more info please visit Wiki for API documentation.
