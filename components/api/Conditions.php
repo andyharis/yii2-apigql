@@ -23,6 +23,7 @@ class Conditions extends Model
   public $rawAttribute;
   public $rawCondition;
   public $warnings = [];
+  public $noAlias = false;
   /**
    * @var SneakyRecord
    */
@@ -36,6 +37,13 @@ class Conditions extends Model
     '>=' => 'gteq',
 //    'radial\(\d+,\d+,\d+\)' => 'radialSearch'
   ];
+
+//  public function __construct(array $config = [])
+//  {
+//
+//    krsort($this->conditions);
+//    parent::__construct($config);
+//  }
 
   public function __construct($model, $attribute, $chain)
   {
@@ -66,6 +74,8 @@ class Conditions extends Model
 
   private function getAttribute()
   {
+    if ($this->noAlias)
+      return $this->rawAttribute;
     return "{$this->model->alias}.{$this->rawAttribute}";
   }
 

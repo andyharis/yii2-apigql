@@ -12,7 +12,11 @@ Where:
 
 So the pattern is `http://example.com/gql/$name-of-your-model`.
 
-For example you have model `\frontend\models\Clients` and you named it `clients`, to fetch some data for you simply need to request: 
+For example you have model `\frontend\models\Clients` and you named it `clients`, to fetch some data for you simply need to request:
+ 
+```&having=[{"fullName":":~Mr"}]```
+
+```&where=[{"sName":":~Mr"}]```
 
 GET /gql/clients `http://example.com/gql/clients`
 ```json

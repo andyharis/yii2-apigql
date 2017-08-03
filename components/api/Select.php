@@ -17,12 +17,16 @@ class Select extends Model
 {
   public $model;
   public $attribute;
+  public $hasCustomAttribute = false;
+  public $customAttribute;
   public $rawAttribute;
+
 
   public function __construct($model, $attribute)
   {
     $this->model = $model;
     $this->attribute = $attribute;
+    $this->checkForCustomSelect();
   }
 
   public function addSelectAttribute()
@@ -38,11 +42,12 @@ class Select extends Model
       $args = $this->getFnArgs($this->attribute, $match[0]);
       $this->rawAttribute = preg_split('/:fn/', $this->attribute)[0];
       if ($this->hasMethod($function)) {
-        return $this->$function($args);
+        $this->hasCustomAttribute = true;
+        $this->customAttribute = $this->$function($args);
       } else
         throw new \BadMethodCallException("Method $function not found!");
     }
-    return [$this->model->alias . '.' . $this->attribute];
+    return $this;
   }
 
   public function getFnName($name)
@@ -66,9 +71,6 @@ class Select extends Model
       $select[] = $this->model->hasAttribute($attribute) ? $this->model->alias . '.' . $attribute : $attribute;
     }
     $select = implode(',', $select);
-//    echo "Debug: <b>" . __FILE__ . "</b> on method <b>" . __METHOD__ . "</b> on line <b>" . __LINE__ . "</b>";
-//    \frontend\components\Helpers::debug(false,$select);
-//    exit;
     $select = "(concat($select)) as {$this->rawAttribute}";
     return [$select];
   }

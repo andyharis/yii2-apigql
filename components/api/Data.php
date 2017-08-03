@@ -19,7 +19,8 @@ class Data
     $data = [
       'select' => [],
       'limit' => \Yii::$app->gql->limit,
-      'where' => [],
+      'advancedWhere' => [],
+      'advancedHaving' => [],
       'offset' => 0,
       'sort' => []
     ];
@@ -36,6 +37,20 @@ class Data
     $data = $isset(['page', 'offset'], 'offset');
     if (isset($params['sort']))
       $data['sort'] = preg_split('/,/', $params['sort']);
+    if (isset($params['where']))
+      $data['advancedWhere'] = self::getJsonParams($params['where']);
+    if (isset($params['having']))
+      $data['advancedHaving'] = self::getJsonParams($params['having']);
+    return $data;
+  }
+
+  public static function getJsonParams($input)
+  {
+    $data = [];
+    try {
+      $data = Json::decode($input);
+    } catch (\Throwable $e) {
+    }
     return $data;
   }
 
@@ -72,7 +87,7 @@ class Data
       if (is_array($array))
         $select[$key] = self::combine($array);
       else
-        $select[] = $array ? $key.$array : $key;
+        $select[] = $array ? $key . $array : $key;
     }
     return $select;
   }

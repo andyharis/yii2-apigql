@@ -29,10 +29,17 @@ class Core extends Model
   public $className;
 
   public $select = [];
+
   public $limit = 25;
-  public $sort = [];
-  public $where = [];
   public $offset = 0;
+  public $sort = [];
+
+  public $where = [];
+  public $having = [];
+  public $advancedWhere = [];
+  public $advancedHaving = [];
+
+  public $customSelectAttributes = [];
 
   public $with = [];
   public $joinWith = [];
@@ -78,12 +85,28 @@ class Core extends Model
 
   public function prepareQuery()
   {
-    return $this->prepareSelect()->prepareLimit()->prepareSort()->prepareWhere()->prepareRelations();
+    return $this->prepareSelect()->prepareLimit()->prepareSort()->prepareWhere()->prepareHaving()->prepareRelations();
   }
 
   private function prepareSelect()
   {
     $this->query = $this->recursiveSelect($this->select, $this->model, $this->query, []);
+    $getModel = function ($chain) {
+      return $this->getModelByChain($chain);
+    };
+    foreach ($this->advancedWhere as $k => $conditions) {
+      $this->where[] = (new AdvancedConditions(['condition' => $conditions, 'model' => $this->model, 'getModel' => $getModel]))->prepareCondition();
+    }
+    foreach ($this->advancedHaving as $k => $conditions) {
+      $params = [
+        'condition' => $conditions,
+        'model' => $this->model,
+        'getModel' => $getModel,
+        'having' => true,
+        'customAttributes' => $this->customSelectAttributes
+      ];
+      $this->having[] = (new AdvancedConditions($params))->prepareCondition();
+    }
     return $this;
   }
 
@@ -104,7 +127,17 @@ class Core extends Model
   private function prepareWhere()
   {
     foreach ($this->where as $conditions) {
-      $this->query->andWhere($conditions->getCondition());
+      if (!$conditions->chain)
+        $this->query->andWhere($conditions->getCondition());
+    }
+    return $this;
+  }
+
+  private function prepareHaving()
+  {
+    foreach ($this->having as $conditions) {
+      if (!$conditions->chain)
+        $this->query->andHaving($conditions->getCondition());
     }
     return $this;
   }
@@ -120,9 +153,15 @@ class Core extends Model
 
   public function execute()
   {
+    if (isset($_GET['q'])) {
+      echo "Debug: <b>" . __FILE__ . "</b> on method <b>" . __METHOD__ . "</b> on line <b>" . __LINE__ . "</b>";
+      \frontend\components\Helpers::debug(false, $this->query->createCommand()->rawSql);
+      exit;
+    }
     $count = clone $this->query;
     $count->select($this->addAttribute($this->model, $this->model->PK));
     $count->orderBy = [$this->addAttribute($this->model, $this->model->PK) => SORT_ASC];
+    $count->having = null;
     $data = $this->query->all();
     if (isset($_GET['trace'])) {
       echo "Debug: <b>" . __FILE__ . "</b> on method <b>" . __METHOD__ . "</b> on line <b>" . __LINE__ . "</b>";
@@ -182,10 +221,19 @@ class Core extends Model
         function ($params, $query, $primaryModel, $join) use ($joinModel, $relatedTable, $stringChain, $joinAttributes, $relationLink) {
           $query->addSelect($this->addAttribute($primaryModel, $relationLink[1]));
           return [
-            $relatedTable => function ($q) use ($joinModel, $stringChain, $joinAttributes, $params, $query, $relationLink, $primaryModel, $join) {
+            $relatedTable => function ($q) use ($joinModel, $query, $stringChain, $joinAttributes, $params, $relationLink, $primaryModel, $join) {
               foreach ($this->where as $conditions) {
-                if ($conditions->chain == $stringChain)
+                echo "Debug: <b>" . __FILE__ . "</b> on method <b>" . __METHOD__ . "</b> on line <b>" . __LINE__ . "</b>";
+                \frontend\components\Helpers::debug(false, [
+                  $stringChain,
+                  $this->where
+                ]);
+                exit;
+                if ($conditions->chain == $stringChain) {
                   $q->andWhere($conditions->getCondition());
+//                  $query->andWhere($conditions->getCondition());
+                  unset($this->where[$k]);
+                }
               }
               if (isset($this->joinWith[$stringChain]) && isset($this->joinWith[$stringChain]['sort']))
                 $q->addOrderBy($this->joinWith[$stringChain]['sort']);
@@ -205,7 +253,7 @@ class Core extends Model
                 return $return;
               };
 //              if ($this->checkIsDone($stringChain, $join)) {
-                $this->appendRelations($this->joinWith, $joinModel, $q, self::JOIN_WITH, $cb);
+              $this->appendRelations($this->joinWith, $joinModel, $q, self::JOIN_WITH, $cb);
 //              }
               $this->appendRelations($this->with, $joinModel, $q, self::JOIN, $cb);
 //              \frontend\components\Helpers::debug(false, [
@@ -243,15 +291,6 @@ class Core extends Model
           $this->warnings[] = "Model {$model::className()} doesn't have relation named '{$relatedTable}'.";
       } else {
         $this->addSelect($model, $attribute, $chain, count($chain) == 0 ? $query : false);
-//        if (!$this->checkCustomFunction($attribute)) {
-//          $rawAttribute = $this->getRawAttribute($attribute);
-//          if ($model->hasAttribute($rawAttribute)) {
-//            $this->addWhere($model, $attribute, $chain);
-//            if (count($chain) == 0)
-//              $query->addSelect($this->addAttribute($model, $rawAttribute));
-//          } else
-//            $this->warnings[] = "Model {$model::className()} doesn't have attribute '{$attribute}'.";
-//        }
       }
     }
     return $query;
@@ -260,14 +299,21 @@ class Core extends Model
   public function addSelect($model, $attribute, $chain, $query = false)
   {
     $selectObject = new Select($model, $attribute);
-    if ($attribute = $selectObject->addSelectAttribute()) {
-      if ($query)
-        $query->addSelect($attribute);
+    $select = $this->getRawAttribute($attribute);
+    if ($selectObject->hasCustomAttribute) {
+      $select = $selectObject->customAttribute;
+      $this->customSelectAttributes[$selectObject->rawAttribute] = $select;
+    } else if ($model->hasAttribute($select)) {
+      $this->addWhere($model, $attribute, $chain);
+      $select = $this->addAttribute($model, $select);
     } else {
-      $this->warnings[] = "Model {$model::className()} doesn't have attribute '{$attribute}'.";
+      $this->warnings[] = "Model {$model::className()} doesn't have attribute '{$attribute}' in chain '{$chain}'.";
+      return false;
+    }
+    if ($query) {
+      $query->addSelect($select);
     }
   }
-
 
   public static function getPrimaryModel($query, $table = false)
   {
@@ -293,8 +339,12 @@ class Core extends Model
   public function addWhere($model, $attribute, $chain)
   {
     $conditions = new $this->conditions($model, $attribute, implode('.', $chain));
-//    \frontend\components\Helpers::debug(false, $attribute);
     if ($conditions->hasConditions()) {
+      $this->trace[] = [
+        'message' => 'Adding new condition',
+        'condition' => $conditions->getCondition()
+      ];
+//      $model->andWhere($conditions->getCondition());
       $this->where[] = $conditions;
       if (count($chain) > 0) {
         $this->changeJoin($chain);
