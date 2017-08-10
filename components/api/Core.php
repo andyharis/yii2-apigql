@@ -95,7 +95,10 @@ class Core extends Model
       return $this->getModelByChain($chain);
     };
     foreach ($this->advancedWhere as $k => $conditions) {
-      $this->where[] = (new AdvancedConditions(['condition' => $conditions, 'model' => $this->model, 'getModel' => $getModel]))->prepareCondition();
+      $this->where[] = $ac = (new AdvancedConditions(['condition' => $conditions, 'model' => $this->model, 'getModel' => $getModel]))->prepareCondition();
+//      echo "Debug: <b>" . __FILE__ . "</b> on method <b>" . __METHOD__ . "</b> on line <b>" . __LINE__ . "</b>";
+//      \frontend\components\Helpers::debug(false,$ac->getCondition());
+//      exit;
     }
     foreach ($this->advancedHaving as $k => $conditions) {
       $params = [
@@ -222,13 +225,13 @@ class Core extends Model
           $query->addSelect($this->addAttribute($primaryModel, $relationLink[1]));
           return [
             $relatedTable => function ($q) use ($joinModel, $query, $stringChain, $joinAttributes, $params, $relationLink, $primaryModel, $join) {
-              foreach ($this->where as $conditions) {
-                echo "Debug: <b>" . __FILE__ . "</b> on method <b>" . __METHOD__ . "</b> on line <b>" . __LINE__ . "</b>";
-                \frontend\components\Helpers::debug(false, [
-                  $stringChain,
-                  $this->where
-                ]);
-                exit;
+              foreach ($this->where as $k=>$conditions) {
+//                echo "Debug: <b>" . __FILE__ . "</b> on method <b>" . __METHOD__ . "</b> on line <b>" . __LINE__ . "</b>";
+//                \frontend\components\Helpers::debug(false, [
+//                  $stringChain,
+//                  $this->where
+//                ]);
+//                exit;
                 if ($conditions->chain == $stringChain) {
                   $q->andWhere($conditions->getCondition());
 //                  $query->andWhere($conditions->getCondition());

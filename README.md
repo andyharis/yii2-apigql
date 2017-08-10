@@ -2,16 +2,10 @@ andyharis/yii2-apigql
 ==========
 yii2-apigql provides methods to work with database on CRUD operations
 
-Installation
-------------
-
-The preferred way to install this extension is through [composer](http://getcomposer.org/download/).
-Either run
-```
-composer require andyharis/yii2apigql
-```
 Usage
 ---
+[API docs](docs.md) 
+
 For example we have 3 table/models: Users, Messages, Post.
 
 * `Users` -> hasMany `Messages`
@@ -70,6 +64,16 @@ GET `/clients?select={"username": "","avatarUrl": "","messages": {"textMessage":
   * `/clients?select={"username":"=Andyhar"}` - where `username equals Andyhar`
   * `/clients?select={"messages":{"textMessage":"~Rocks"}}` - where `messages.textMessage like Rocks`
   * `/clients?select={"messages":{"post":{"likes":">35"}}}` - where `messages.post.likes > 35`
+
+
+Installation
+------------
+
+The preferred way to install this extension is through [composer](http://getcomposer.org/download/).
+Either run
+```
+composer require andyharis/yii2apigql
+```
 
 
 Getting started
