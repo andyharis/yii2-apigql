@@ -5,6 +5,7 @@ Some docs information here
     - [Select](#select) 
     - [Sort](#sort) 
     - [Where](#where) 
+- [Adding data](#adding-data)
 ## Fetching data
 To fetch data you may specify list of GET params:
 
@@ -45,10 +46,13 @@ Example usage:
 ```text
 // SELECT username, email
 /clients?select={"username":"","email":""}
+
 // SELECT username, profile.firstName, profile.lastName
 /clients?select={"username":"","profile":{"firstName":"","lastName":""}}
+
 // SELECT username ... WHERE  username = 'Andyhar'
 /clients?select={"username":":=Andyhar","email":""}
+
 // SELECT username, email, profile.age ... WHERE  profile.age > 30
 /clients?select={"username":"","email":"","profile":{"age":":>30"}}
 ```
@@ -74,8 +78,10 @@ Example usage:
 ```text
 // ORDER BY clients.username ASC
 /clients?select={"username":"","email":""}&sort=username
+
 // ORDER BY clients.username ASC profile.age DESC
-/clients?select={"username":"","email":"","profile":{"age":"""}}&sort=username,!profile.age 
+/clients?select={"username":"","email":"","profile":{"age":"""}}&sort=username,!profile.age
+ 
 // ORDER BY invoices.username ASC
 /clients?select={"username":"","profile":{"invoices":{"date_created":""}}}&sort=profile.invoices.date_created 
 ```
@@ -98,6 +104,12 @@ Example usage:
 ```text
 // WHERE (username LIKE `%andyhar%`) OR (profile.firstName = 'andyhar')
 /clients?where=[["or","username:~andyhar","profile.firstName:=andyhar"]]
+
 // WHERE status=1 AND (profile.firstName LIKE `%andyhar%` OR profile.lastNmae LIKE '%andyhar%')
 /clients?where=[["and","status:=1",["or","profile.firstName:~andyhar","profile.lastName:~andyhar"]]]
 ````
+
+
+## Adding data
+
+To fetch data you must specify list of POST params:

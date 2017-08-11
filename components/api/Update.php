@@ -10,7 +10,7 @@ namespace andyharis\yii2apigql\components\api;
 
 
 use andyharis\yii2apigql\components\Helpers;
-use frontend\components\SneakyRecord;
+use andyharis\yii2apigql\components\Yii2ApigqlRecord;
 use yii\base\Object;
 
 class Update extends Object
@@ -19,7 +19,7 @@ class Update extends Object
   const UPDATE_RELATED = 1;
   public $table;
   /**
-   * @var SneakyRecord
+   * @var Yii2ApigqlRecord
    */
   public $model;
   public $data = [];
@@ -52,7 +52,7 @@ class Update extends Object
   }
 
   /**
-   * @param $model SneakyRecord
+   * @param $model Yii2ApigqlRecord
    * @param $data
    * @param $chain
    * @param int $type
@@ -93,7 +93,7 @@ class Update extends Object
   }
 
   /**
-   * @param $model SneakyRecord
+   * @param $model Yii2ApigqlRecord
    * @param $data
    * @param $chain
    * @return bool
@@ -101,16 +101,16 @@ class Update extends Object
   private function checkMultipleUpdate($model, $data, $chain)
   {
     $return = false;
-    if (isset($data[SneakyRecord::ACTION_ADD])) {
-      $this->prepareMultiple($data, SneakyRecord::ACTION_ADD, $model, $chain);
+    if (isset($data[Yii2ApigqlRecord::ACTION_ADD])) {
+      $this->prepareMultiple($data, Yii2ApigqlRecord::ACTION_ADD, $model, $chain);
       $return = true;
     }
-    if (isset($data[SneakyRecord::ACTION_EDIT])) {
-      $this->prepareMultiple($data, SneakyRecord::ACTION_EDIT, $model, $chain);
+    if (isset($data[Yii2ApigqlRecord::ACTION_EDIT])) {
+      $this->prepareMultiple($data, Yii2ApigqlRecord::ACTION_EDIT, $model, $chain);
       $return = true;
     }
-    if (isset($data[SneakyRecord::ACTION_DELETE])) {
-      $deleteModel = $model::findAll($data[SneakyRecord::ACTION_DELETE]);
+    if (isset($data[Yii2ApigqlRecord::ACTION_DELETE])) {
+      $deleteModel = $model::findAll($data[Yii2ApigqlRecord::ACTION_DELETE]);
       $this->deleteUpdates = array_merge($this->deleteUpdates, $deleteModel);
       $return = true;
     }
@@ -121,7 +121,7 @@ class Update extends Object
   {
     $i = 0;
     foreach ($data[$action] as $index => $values) {
-      if ($action == SneakyRecord::ACTION_EDIT) {
+      if ($action == Yii2ApigqlRecord::ACTION_EDIT) {
         $nextModel = $model::findOne($index);
         $index = $i;
       } else
@@ -134,7 +134,7 @@ class Update extends Object
   }
 
   /**
-   * @param $model SneakyRecord
+   * @param $model Yii2ApigqlRecord
    */
   private function validateEntity($model, $chain)
   {
@@ -156,7 +156,7 @@ class Update extends Object
   }
 
   /**
-   * @param $model SneakyRecord
+   * @param $model Yii2ApigqlRecord
    * @param $attribute
    * @param $value
    * @param $chain
@@ -239,7 +239,7 @@ class Update extends Object
   }
 
   /**
-   * @param $entity SneakyRecord
+   * @param $entity Yii2ApigqlRecord
    * @param $chain
    * @return array
    */
@@ -263,7 +263,7 @@ class Update extends Object
   }
 
   /**
-   * @param $entity SneakyRecord
+   * @param $entity Yii2ApigqlRecord
    * @param $chain
    */
   private function insertRelations($entity, $chain)
