@@ -32,7 +32,7 @@ our request will be
 ```
 
 First argument in JSON is the model attribute you want to fetch and the second is query condition: 
-```json
+```text
 {
   "attribute":"where condition",
   "username":":=Andyhar", // username = "Andyhar"
@@ -108,7 +108,6 @@ Example usage:
 // WHERE status=1 AND (profile.firstName LIKE `%andyhar%` OR profile.lastNmae LIKE '%andyhar%')
 /clients?where=[["and","status:=1",["or","profile.firstName:~andyhar","profile.lastName:~andyhar"]]]
 ````
-
 
 ## Adding data
 
