@@ -31,7 +31,7 @@ our request will be
 ```
 
 First argument in JSON is the model attribute you want to fetch and the second is query condition: 
-```json
+```text
 {
   "attribute":"where condition",
   "username":":=Andyhar", // username = "Andyhar"
