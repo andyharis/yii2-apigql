@@ -5,7 +5,10 @@ Some docs information here
     - [Select](#select) 
     - [Sort](#sort) 
     - [Where](#where) 
-- [Adding data](#adding-data)
+- [Updating data](#updating-data)
+    - [Add](#add)
+    - [Edit](#edit)
+    - [Delete](#delete)
 ## Fetching data
 To fetch data you may specify list of GET params:
 
@@ -109,6 +112,153 @@ Example usage:
 /clients?where=[["and","status:=1",["or","profile.firstName:~andyhar","profile.lastName:~andyhar"]]]
 ````
 
-## Adding data
+## Updating data
 
-To fetch data you must specify list of POST params:
+To fetch data you must send POST request `application/json` type with following json structure:
+```json
+{
+  "data": {
+    "username": "Bandyhar"
+  }
+}
+```
+
+You can add, edit, delete any data in main and nested tables. 
+#### Add
+
+
+Example usage:
+###### Trying to add new member with HAS_ONE relation
+POST /members
+```text
+{
+  "data": {
+    "username": "Andyhar",
+    "email": "andyharrisonnd@gmail.com",
+    "profile": {
+      "firstName": "Andy",
+      "lastName": "Harrison"
+    }
+  }
+}
+``` 
+This will insert main table `members` and then `profile` with newly created member id.
+
+###### Trying to add new product with HAS_MANY relations
+When you work with `HAS_MANY` relation data, you should use `add`, `edit`,`delete` param to let API know what to do with current row.
+
+`add` param requires an array of table attributes for example:
+
+/products
+```text
+{
+  "data": {
+    "name":"Product",
+    "images":{
+      "add":[ 
+        {"fileName":"img1"}, // attribute `filename` will be inserted in table `images`
+        {"fileName":"img2"},
+        {"fileName":"img3"},
+      ]
+    }
+  }
+}
+```
+This will create a new `product` and insert all `images` relation rows
+#### Edit
+
+###### Trying to edit member with HAS_ONE relations
+POST /members/`id`
+```text
+Send same json structure as for Add
+{
+  "data": {
+    "username": "Andyhar2",
+    "email": "andyharrisonnd@gmail.com",
+    "profile": {
+      "firstName": "Andy2",
+      "lastName": "Harrison2"
+    }
+  }
+}
+```
+This will edit all rows which was sent to this request.
+
+###### Trying to edit new product with HAS_MANY relations
+You should use `id` param in request to let API know which row to edit.
+When you work with `HAS_MANY` relation data, you should use `add`, `edit`,`delete` param to let API know what to do with current row.
+POST /products/`id`
+```text
+{
+  "data": {
+    "name": "Product",
+    "images": {
+      "edit": { //using edit params
+        "id1": { //using id of row we want to edit
+          // attribute `fileName` will be updated in table `images` in row with id `id1`
+          "fileName": "img-super-important" 
+        },
+        "id2": {
+          "fileName": "another important name"
+        },
+      }
+    }
+  }
+}
+```
+
+#### Delete
+
+When you delete nested data you should specify an array of `ids` which rows should be deleted in `table` you provided.
+
+###### You can delete any nested data by providing full delete path
+We need to specify which row we want to update using `id`
+
+Example:
+POST /products/`id`
+```text
+{
+  "data": {
+    "name": "Product",
+    "images": {
+      // use `delete` params to let API know that you want to delete some rows
+      // provide an array of `ids` to delete all rows from table `images`
+      "delete": [
+        'id1',
+        'id3'
+      ]
+    }
+  }
+}
+```
+
+
+#### Complex example 
+You can `add`, `edit`, `delete` rows in one single query!
+POST /products/121
+```text
+{
+  "data": {
+    "name": "New name",
+    "description":"This is important",
+    "images": {
+      "add":[
+        {"fileName":"new image1"},
+        {"fileName":"new image2"},
+      ],
+      "edit":{
+        "342":{"fileName":"i missed spelling"}
+      },
+      "delete": [
+        'id1',
+        'id3'
+      ]
+    },
+    "tags":{
+      "add":[
+        {"name":"tag-name"}
+      ]
+    }
+  }
+}
+```
