@@ -13,7 +13,7 @@ To fetch data you may specify list of GET params:
 Select should follow JSON standard to work properly.
 For example we want to fetch data from table `users` which has relation `profile`.
 
-Example usage:
+Here is the json we want to fetch:
 ```json
 {
   "username":"",
@@ -25,8 +25,34 @@ Example usage:
   }
 }
 ```
-So the query should look like
-``/clients?select={"username":"","email":"","profile":{"age":"""}}``
+our request will be
+```text
+/clients?select={"username":"","email":"","profile":{"firstName":"","lastName":"","age":""}}
+```
+
+First argument in JSON is the model attribute you want to fetch and the second is query condition: 
+```json
+{
+  "attribute":"where condition",
+  "username":":=Andyhar", // username = "Andyhar"
+  "email":":~andyhar", // email LIKE "%andyhar%"
+  "profile":{
+    "age":":>30"  // age > 30
+  }
+}
+```
+Example usage:
+```text
+// SELECT username, email
+/clients?select={"username":"","email":""}
+// SELECT username, profile.firstName, profile.lastName
+/clients?select={"username":"","profile":{"firstName":"","lastName":""}}
+// SELECT username ... WHERE  username = 'Andyhar'
+/clients?select={"username":":=Andyhar","email":""}
+// SELECT username, email, profile.age ... WHERE  profile.age > 30
+/clients?select={"username":"","email":"","profile":{"age":":>30"}}
+```
+See [Where](#where) section for more info about where conditions.
 
 When you use attributes in `select` parameter, you should follow one simple thing - access data in current environment.
 You can access any nested data follow this structure. 
