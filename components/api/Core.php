@@ -85,7 +85,12 @@ class Core extends Model
 
   public function prepareQuery()
   {
-    return $this->prepareSelect()->prepareLimit()->prepareSort()->prepareWhere()->prepareHaving()->prepareRelations();
+    return $this->prepareSelect()
+      ->prepareLimit()
+      ->prepareSort()
+      ->prepareWhere()
+      ->prepareHaving()
+      ->prepareRelations();
   }
 
   private function prepareSelect()
@@ -115,7 +120,7 @@ class Core extends Model
 
   private function prepareLimit()
   {
-    $this->query->limit($this->limit)->offset($this->offset);
+    $this->query->limit($this->limit)->offset($this->offset > 1 ? $this->offset * $this->limit : 0);
     return $this;
   }
 
@@ -158,7 +163,7 @@ class Core extends Model
   {
     if (isset($_GET['q'])) {
       echo "Debug: <b>" . __FILE__ . "</b> on method <b>" . __METHOD__ . "</b> on line <b>" . __LINE__ . "</b>";
-      \frontend\components\Helpers::debug(false, $this->query->createCommand()->rawSql);
+      Helpers::debug(false, $this->query->createCommand()->rawSql);
       exit;
     }
     $count = clone $this->query;
@@ -217,7 +222,8 @@ class Core extends Model
     $currentAttributes = $resultAttributes;
     $relationLink = $this->getRelationLink($model, $relatedTable);
     $joinAttributes = array_merge($currentAttributes, [
-      $relationLink[0]
+      $relationLink[0],
+      $joinModel->PK
     ]);
     $this->with[$stringChain] = [
       'join' => [
@@ -225,7 +231,7 @@ class Core extends Model
           $query->addSelect($this->addAttribute($primaryModel, $relationLink[1]));
           return [
             $relatedTable => function ($q) use ($joinModel, $query, $stringChain, $joinAttributes, $params, $relationLink, $primaryModel, $join) {
-              foreach ($this->where as $k=>$conditions) {
+              foreach ($this->where as $k => $conditions) {
 //                echo "Debug: <b>" . __FILE__ . "</b> on method <b>" . __METHOD__ . "</b> on line <b>" . __LINE__ . "</b>";
 //                \frontend\components\Helpers::debug(false, [
 //                  $stringChain,
@@ -301,7 +307,7 @@ class Core extends Model
 
   public function addSelect($model, $attribute, $chain, $query = false)
   {
-    $selectObject = new Select($model, $attribute);
+    $selectObject = new \Yii::$app->gql->select($model, $attribute);
     $select = $this->getRawAttribute($attribute);
     if ($selectObject->hasCustomAttribute) {
       $select = $selectObject->customAttribute;

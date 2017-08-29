@@ -31,8 +31,25 @@ class ApigqlController extends API
       Helpers::debug(false, $data);
       exit;
     }
-    if ($result['success'])
-      return Helpers::result(true, $data, $bootstrap->apiMessage, [], $result['count']);
+    if ($result['success']) {
+      $return = Helpers::result(true, $data, $bootstrap->apiMessage, [], $result['count']);
+      if ($bootstrap->postProcessing !== false) {
+        $post = new $bootstrap->postProcessing($data,$table);
+        try {
+
+          return Helpers::result(true, $post->init(), $bootstrap->apiMessage, [], $result['count']);
+        } catch (\Throwable $e) {
+          echo "<pre>";
+          print_r([
+            'message' => "You should add method `init` to your post processing class, so it could return changed data.",
+            'class' => $bootstrap->postProcessing
+          ]);
+          echo "</pre>";
+          exit;
+        }
+      }
+      return $return;
+    }
     return Helpers::error($data);
   }
 
