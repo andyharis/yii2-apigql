@@ -130,7 +130,7 @@ You can add, edit, delete any data in main and nested tables.
 Example usage:
 ###### Trying to add new member with HAS_ONE relation
 POST /members
-```text
+```javascript
 {
   "data": {
     "username": "Andyhar",
@@ -150,7 +150,7 @@ When you work with `HAS_MANY` relation data, you should use `add`, `edit`,`delet
 `add` param requires an array of table attributes for example:
 
 /products
-```text
+```javascript
 {
   "data": {
     "name":"Product",
@@ -169,7 +169,7 @@ This will create a new `product` and insert all `images` relation rows
 
 ###### Trying to edit member with HAS_ONE relations
 POST /members/`id`
-```text
+```javascript
 Send same json structure as for Add
 {
   "data": {
@@ -188,7 +188,7 @@ This will edit all rows which was sent to this request.
 You should use `id` param in request to let API know which row to edit.
 When you work with `HAS_MANY` relation data, you should use `add`, `edit`,`delete` param to let API know what to do with current row.
 POST /products/`id`
-```text
+```javascript
 {
   "data": {
     "name": "Product",
@@ -216,7 +216,7 @@ We need to specify which row we want to update using `id`
 
 Example:
 POST /products/`id`
-```text
+```javascript
 {
   "data": {
     "name": "Product",
@@ -236,7 +236,7 @@ POST /products/`id`
 #### Complex example 
 You can `add`, `edit`, `delete` rows in one single query!
 POST /products/121
-```text
+```javascript
 {
   "data": {
     "name": "New name",

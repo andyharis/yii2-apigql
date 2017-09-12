@@ -28,11 +28,11 @@ We want to access clients with all messages including post:
 Make request and get all data with the same format you provided.
 
 GET `/clients?select={"username": "","avatarUrl": "","messages": {"textMessage": "","dateAdded": "","post": {"postName": ""}}}`
-```json
+```javascript
 // response
 [
   {
-    "username": "Andyahr",
+    "username": "Andyhar",
     "avatarUrl": "http://example.com/andyhar.png",
     "messages": [
       {
@@ -51,9 +51,6 @@ GET `/clients?select={"username": "","avatarUrl": "","messages": {"textMessage":
       }
     ]
   },
-  {},
-  {},
-  ...
 ]
 ```
 * Access main model and nested relations data with one query.
@@ -87,7 +84,7 @@ return [
   'id' => 'app-frontend',
   'basePath' => dirname(__DIR__),
   'bootstrap' => ['log', 'gql'],
-   ...
+   // your code
 ];
 ``` 
 Then you need to initialize component itself.
@@ -99,7 +96,7 @@ Just add new component `gql` to list of your components:
      'class' => "andyharis\yii2apigql\Bootstrap",
      'relations' => require 'models.php'
     ],
-    ...
+    // your code
 ]
 ```
 Creating file models.php
