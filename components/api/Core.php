@@ -316,7 +316,7 @@ class Core extends Model
       $this->addWhere($model, $attribute, $chain);
       $select = $this->addAttribute($model, $select);
     } else {
-      $this->warnings[] = "Model {$model::className()} doesn't have attribute '{$attribute}' in chain '{$chain}'.";
+      $this->warnings[] = "Model {$model::className()} doesn't have attribute '{$attribute}' in chain '{".implode(".",$chain)."}'.";
       return false;
     }
     if ($query) {

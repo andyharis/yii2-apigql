@@ -19,9 +19,11 @@ class API extends Controller
 
   public function beforeAction($action)
   {
-    \Yii::$app->response->format = Response::FORMAT_JSON;
+//    \Yii::$app->response->format = Response::FORMAT_JSON;
     ini_set('memory_limit', '1024M');
-    header('Access-Control-Allow-Origin: *');
+//    header('Access-Control-Allow-Credentials: true');
+//    header('Access-Control-Allow-Origin: *');
+//    header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS');
 //    $req = \Yii::$app->request;
 //    if (!isset($_GET['ZADMINA']) && $action->id != 'pdf') {
 //      if (!isset($req->headers['Authorization'])) {
@@ -39,10 +41,17 @@ class API extends Controller
 
   public function behaviors()
   {
-    return [
+    return array_merge(parent::behaviors(), [
+      // For cross-domain AJAX request
       'corsFilter' => [
         'class' => \yii\filters\Cors::className(),
+        'cors' => [
+          'Origin' => ['*'],
+          'Access-Control-Request-Method' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
+          'Access-Control-Allow-Credentials' => true,
+          'Access-Control-Max-Age' => 3600,                 // Cache (seconds)
+        ],
       ],
-    ];
+    ]);
   }
 }

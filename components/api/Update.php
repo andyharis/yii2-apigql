@@ -289,7 +289,8 @@ class Update extends Object
 
   public function execute()
   {
-    $result = $this->insertTransaction($this->model);
-    return $result;
+    if (!$this->hasErrors())
+      return $this->insertTransaction($this->model);
+    return false;
   }
 }
