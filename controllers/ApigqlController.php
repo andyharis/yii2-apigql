@@ -34,9 +34,8 @@ class ApigqlController extends API
     if ($result['success']) {
       $return = Helpers::result(true, $data, $bootstrap->apiMessage, [], $result['count']);
       if ($bootstrap->postProcessing !== false) {
-        $post = new $bootstrap->postProcessing($data,$table);
+        $post = new $bootstrap->postProcessing($data, $table);
         try {
-
           return Helpers::result(true, $post->init(), $bootstrap->apiMessage, [], $result['count']);
         } catch (\Throwable $e) {
           echo "<pre>";
@@ -55,6 +54,7 @@ class ApigqlController extends API
 
   public function actionUpdate($table, $id = null)
   {
+    $bootstrap = \Yii::$app->gql;
     $data = false;
     try {
       $json = file_get_contents('php://input');
@@ -69,8 +69,23 @@ class ApigqlController extends API
     $core = new Update($table, $data['data'], $id);
     $core->validateUpdate();
     $result = $core->execute();
-    if (!$core->hasErrors())
+    if (!$core->hasErrors()) {
+      if ($bootstrap->postProcessing !== false) {
+        $post = new $bootstrap->postProcessing($result, $table);
+        try {
+          return Helpers::result(true, $post->init(), $bootstrap->apiMessage, [], 1);
+        } catch (\Throwable $e) {
+          echo "<pre>";
+          print_r([
+            'message' => "You should add method `init` to your post processing class, so it could return changed data.",
+            'class' => $bootstrap->postProcessing
+          ]);
+          echo "</pre>";
+          exit;
+        }
+      }
       return Helpers::result(true, $result, false, [], 1);
+    }
     return Helpers::error($core->errors);
   }
 }

@@ -99,8 +99,13 @@ class Core extends Model
     $getModel = function ($chain) {
       return $this->getModelByChain($chain);
     };
+    if (!is_array($this->advancedWhere)) {
+      $this->addError('where', 'Your where condition should be an array!');
+      $this->advancedWhere = [];
+    }
     foreach ($this->advancedWhere as $k => $conditions) {
-      $this->where[] = $ac = (new AdvancedConditions(['condition' => $conditions, 'model' => $this->model, 'getModel' => $getModel]))->prepareCondition();
+      $params = ['condition' => $conditions, 'model' => $this->model, 'getModel' => $getModel];
+      $this->where[] = $ac = (new AdvancedConditions($params))->prepareCondition();
 //      echo "Debug: <b>" . __FILE__ . "</b> on method <b>" . __METHOD__ . "</b> on line <b>" . __LINE__ . "</b>";
 //      \frontend\components\Helpers::debug(false,$ac->getCondition());
 //      exit;
@@ -316,7 +321,7 @@ class Core extends Model
       $this->addWhere($model, $attribute, $chain);
       $select = $this->addAttribute($model, $select);
     } else {
-      $this->warnings[] = "Model {$model::className()} doesn't have attribute '{$attribute}' in chain '{".implode(".",$chain)."}'.";
+      $this->warnings[] = "Model {$model::className()} doesn't have attribute '{$attribute}' in chain '{" . implode(".", $chain) . "}'.";
       return false;
     }
     if ($query) {

@@ -33,8 +33,14 @@ class Bootstrap implements BootstrapInterface
 
   public function bootstrap($app)
   {
-    $app->controllerMap['gql'] = $app->gql->controller;
-    $app->urlManager->addRules($this->rules);
-    \Yii::$app->response->format = Response::FORMAT_JSON;
+//    if ($app->hasModule('gql')) {
+    try {
+      $app->controllerMap['gql'] = $app->gql->controller;
+      $app->urlManager->addRules($this->rules);
+      \Yii::$app->response->format = Response::FORMAT_JSON;
+    } catch (\Throwable $e) {
+
+    }
+//    }
   }
 }
