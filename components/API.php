@@ -20,6 +20,7 @@ class API extends Controller
   public function beforeAction($action)
   {
     ini_set('memory_limit', '1024M');
+    \Yii::$app->response->format = Response::FORMAT_JSON;
 //    header('Access-Control-Allow-Credentials: true');
 //    header('Access-Control-Allow-Origin: *');
 //    header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS');

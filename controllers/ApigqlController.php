@@ -41,7 +41,13 @@ class ApigqlController extends API
           echo "<pre>";
           print_r([
             'message' => "You should add method `init` to your post processing class, so it could return changed data.",
-            'class' => $bootstrap->postProcessing
+            'class' => $bootstrap->postProcessing,
+            'error' => [
+              'message' => $e->getMessage(),
+              'file' => $e->getFile(),
+              'line' => $e->getLine()
+            ],
+            'object' => $post,
           ]);
           echo "</pre>";
           exit;

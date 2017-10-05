@@ -117,12 +117,18 @@ class Update extends Object
     return $return;
   }
 
+  /**
+   * @param $data
+   * @param $action
+   * @param $model Yii2ApigqlRecord
+   * @param $chain
+   */
   private function prepareMultiple($data, $action, $model, $chain)
   {
     $i = 0;
     foreach ($data[$action] as $index => $values) {
       if ($action == Yii2ApigqlRecord::ACTION_EDIT) {
-        $nextModel = $model::findOne($index);
+        $nextModel = $model::find()->where([$model->PK => "$index"])->one();
         $index = $i;
       } else
         $nextModel = clone $model;
