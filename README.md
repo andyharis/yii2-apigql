@@ -118,7 +118,7 @@ $object
   ->addModel('job', \frontend\models\Job::className());
 // we need to return this object with relations
 return $object;
-```
+``` 
 Where:
 * `clients` - indicates name for your model
 * `\frontend\models\Clients::className()` - indicates what model should use to fetch and update data

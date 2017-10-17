@@ -42,6 +42,11 @@ class Yii2ApigqlRecord extends ActiveRecord
     return self::primaryKey()[0];
   }
 
+  public function callAfterInsert()
+  {
+    return false;
+  }
+
 //  public function beforeSave($insert)
 //  {
 //    if (!$this->iID)

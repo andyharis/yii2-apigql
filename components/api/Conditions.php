@@ -24,6 +24,7 @@ class Conditions extends Model
   public $rawCondition;
   public $warnings = [];
   public $noAlias = false;
+  private $getModel;
   /**
    * @var SneakyRecord
    */
@@ -45,11 +46,12 @@ class Conditions extends Model
 //    parent::__construct($config);
 //  }
 
-  public function __construct($model, $attribute, $chain)
+  public function __construct($model, $attribute, $chain, $getModel = false)
   {
     $this->model = $model;
     $this->attribute = $attribute;
     $this->chain = $chain;
+    $this->getModel = $getModel;
     krsort($this->conditions);
     parent::__construct([]);
   }
@@ -61,7 +63,19 @@ class Conditions extends Model
       //    /(\w+\d+)^{$pattern}$(.+)/
       if (preg_match("/{$pattern}/", $this->attribute)) {
         $splitted = preg_split("/$pattern/", $this->attribute);
-        $this->rawAttribute = $splitted[0];
+        $rawAttribute = $splitted[0];
+        try {
+          if ($this->getModel && is_callable($this->getModel)) {
+            $possibleChain = preg_split('/\./', $rawAttribute);
+            if (count($possibleChain) > 1) {
+              $rawAttribute = call_user_func_array($this->getModel, [$possibleChain[count($possibleChain) - 2]])->alias . '.'.$possibleChain[count($possibleChain) - 1];
+              $this->noAlias = true;
+            }
+          }
+        } catch (\Throwable $e) {
+
+        }
+        $this->rawAttribute = $rawAttribute;
         $this->rawValue = $splitted[1];
         $this->rawCondition = $condition;
         return true;

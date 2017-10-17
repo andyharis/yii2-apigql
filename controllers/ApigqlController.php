@@ -90,6 +90,7 @@ class ApigqlController extends API
           exit;
         }
       }
+      $core->model->callAfterInsert();
       return Helpers::result(true, $result, false, [], 1);
     }
     return Helpers::error($core->errors);

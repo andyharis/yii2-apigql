@@ -74,7 +74,7 @@ class AdvancedConditions extends Model
 
   public function createCondition($model, $finalAttribute, $chain, $rawAttribute = false)
   {
-    $conditionObject = new Conditions($model, $finalAttribute, $chain);
+    $conditionObject = new Conditions($model, $finalAttribute, $chain, $this->getModel);
     $conditionObject->hasConditions();
     $rawAttribute = $rawAttribute ? $rawAttribute : $conditionObject->rawAttribute;
     if (isset($this->customAttributes[$rawAttribute]))
