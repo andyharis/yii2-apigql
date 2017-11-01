@@ -8,59 +8,57 @@ Usage
 
 For example we have 3 table/models: Users, Messages, Post.
 
-* `Users` -> hasMany `Messages`
-* `Messages` -> hasOne `Post`
+* `Users` -> hasMany `Post`
+* `Post` -> hasMany `Messages`
 
 We want to access clients with all messages including post:
 ```json
 {
   "username": "",
   "avatarUrl": "",
-  "messages": {
-    "textMessage": "",
-    "dateAdded": "",
-    "post": {
-      "postName": ""
+  "post": {
+    "postName":"",
+    "messages": {
+      "textMessage": "",
+      "dateAdded": ""
     }
   }
 }
 ```
 Make request and get all data with the same format you provided.
 
-GET `/clients?select={"username": "","avatarUrl": "","messages": {"textMessage": "","dateAdded": "","post": {"postName": ""}}}`
+GET `/clients?select={"username": "","avatarUrl": "","post": {"postName": "","messages": {"textMessage": "","dateAdded": ""}}}`
 ```javascript
 // response
-[
-  {
+{
     "username": "Andyhar",
     "avatarUrl": "http://example.com/andyhar.png",
-    "messages": [
+    "post": [
       {
-        "textMessage": "Hey what a nice post!",
-        "dateAdded": "1500276704",
-        "post": {
-          "postName": "Post about API"
-        }
+        "postName": "Post about API",
+        "dateAdded": "1500276204",
+        "messages": [
+          {
+            "textMessage": "Hey what a nice post!",
+            "dateAdded": "1500276704",
+          },
+          {
+            "textMessage": "Make more posts like this!",
+            "dateAdded": "1500279841",
+          }
+        ]
       },
-      {
-        "textMessage": "Make more posts like this!",
-        "dateAdded": "1500279841",
-        "post": {
-          "postName": "Post about API"
-        }
-      }
     ]
-  },
-]
+  }
 ```
 * Access main model and nested relations data with one query.
 * Sort by nested relations:
-  * `/clients?select={...}&sort=messages.dateAdded` - sort by `messages.dateAdded ASC`
-  * `/clients?select={...}&sort=!messages.post.postName` - sort by `post.postName DESC`
+  * `/clients?select={...}&sort=post.postName` - sort by `post.postName ASC`
+  * `/clients?select={...}&sort=!post.messages.dateAdded` - sort by `post.messaged.dateAdded DESC`
 * Filter data with nested conditions:
   * `/clients?select={"username":"=Andyhar"}` - where `username equals Andyhar`
-  * `/clients?select={"messages":{"textMessage":"~Rocks"}}` - where `messages.textMessage like Rocks`
-  * `/clients?select={"messages":{"post":{"likes":">35"}}}` - where `messages.post.likes > 35`
+  * `/clients?select={"post":{"messages":{"textMessage":"~Rocks"}}}` - where `post.messages.textMessage like Rocks`
+  * `/clients?select={"post":{"likes":">35"}}` - where `post.likes > 35`
 
 
 Installation
