@@ -11,9 +11,9 @@ namespace andyharis\yii2apigql\components\api;
 
 use andyharis\yii2apigql\components\Helpers;
 use andyharis\yii2apigql\components\Yii2ApigqlRecord;
-use yii\base\Object;
+use yii\base\BaseObject;
 
-class Update extends Object
+class Update extends BaseObject
 {
   const UPDATE_LINK = 0;
   const UPDATE_RELATED = 1;

@@ -9,9 +9,9 @@
 namespace andyharis\yii2apigql\components\api;
 
 
-use yii\base\Object;
+use yii\base\BaseObject;
 
-class Relations extends Object
+class Relations extends BaseObject
 {
   public $models = [];
   public $relations = [];
